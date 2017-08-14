@@ -47,6 +47,5 @@ export default class Button extends React.Component<ButtonProps, any> {
     componentWillReceiveProps(nextProps: ButtonProps): void;
     componentWillUnmount(): void;
     handleClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-    handleMouseUp: (e: React.MouseEvent<HTMLButtonElement>) => void;
     render(): JSX.Element;
 }

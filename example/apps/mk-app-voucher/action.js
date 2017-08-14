@@ -32,11 +32,6 @@ class action {
         //this.load()
     }
 
-    focus = (e) => {
-        debugger
-        console.log(e)
-    }
-
 
     addrow = (ps) => {
         this.injections.reduce('addEmptyRow', ps.rowIndex + 1)
@@ -48,68 +43,43 @@ class action {
         this.injections.reduce('delrow', id)
     }
 
-    isFocusCell = (ps, columnKey) => {
-        const focusCellInfo = this.metaAction.gf('data.other.focusCellInfo')
-        if (!focusCellInfo)
-            return false
-        return focusCellInfo.columnKey == columnKey && focusCellInfo.rowIndex == ps.rowIndex
+    cellClick = (e) => {
+        const path = this.findPathByEvent(e)
+        if (this.isFocusCell(path)) return
+
+        this.metaAction.sf('data.other.focusFieldPath', path)
+
+        const that = this
+        setTimeout(() => {
+            const editorDOM = ReactDOM.findDOMNode(that.component).querySelector(".edit-control")
+            if (editorDOM.select)
+                editorDOM.select()
+
+            else if (editorDOM.querySelector('input')) {
+                editorDOM.querySelector('input').click()
+            }
+        }, 16)
     }
 
-
-    mobileChange = (ps) => (v) => {
-        this.metaAction.sf(`data.list.${ps.rowIndex}.mobile`, v)
-    }
-
-    birthdayChange = (ps) => (v) => {
-        this.metaAction.sf(`data.list.${ps.rowIndex}.birthday`, v)
-    }
-
-    sexChange = (ps) => (v) => {
-        if (!v) {
-            this.metaAction.sf(`data.list.${ps.rowIndex}.sex`, undefined)
-            return
-        }
-
-
-        this.metaAction.sf(`data.list.${ps.rowIndex}.sex`, v == 0
-            ? Map({ value: 0, text: '男' })
-            : Map({ value: 1, text: '女' })
-        )
-    }
-
-    cellClick = (ps, columnKey) => (e) => {
-        e.stopPropagation()
-
-        this.metaAction.sf('data.other.focusCellInfo', { rowIndex: ps.rowIndex, columnKey })
-
-        if (columnKey == 'name') {
-            setTimeout(() => {
-                const dom = ReactDOM.findDOMNode(this.refName)
-                dom.select()
-            }, 0)
-        }
-        else if (columnKey == 'mobile')
-            setTimeout(() => {
-                const dom = ReactDOM.findDOMNode(this.refMobile)
-                dom.select()
-            }, 0)
-
-
-    }
-
-    cellGetter = (columnKey) => (ps) => {
+    cellGetter = (columnKey, path) => (ps) => {
         var cellValue = this.metaAction.gf(`data.form.details.${ps.rowIndex}.${columnKey}`)
         var showValue = cellValue
+        var currPath = `${path},${ps.rowIndex}`
 
         if (columnKey == 'birthday') {
             showValue = cellValue ? cellValue.format('YYYY-MM-DD') : cellValue
         }
+        else if (columnKey == 'rela') {
+            showValue = cellValue ? cellValue.get('name') : ''
+        }
 
-        if (!this.isFocusCell(ps, columnKey)) {
+
+        if (!this.isFocusCell(currPath)) {
             return (
                 <DataGrid.TextCell
-                    onClick={this.cellClick(ps, columnKey)}
+                    onClick={this.cellClick}
                     value={showValue}
+                    path={currPath}
                 />
             )
         }
@@ -117,20 +87,20 @@ class action {
         if (columnKey == 'name') {
             return (
                 <Input
-                    className='mk-app-voucher-cell'
+                    className='mk-app-voucher-cell edit-control'
                     onChange={(e) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.name`, e.target.value)}
                     value={cellValue}
-                    ref={o => this.refName = o}
+                    path={currPath}
                 />
             )
         }
         else if (columnKey == 'mobile') {
             return (
                 <Input.Number
-                    className='mk-app-voucher-cell'
-                    onChange={this.mobileChange(ps)}
+                    className='mk-app-voucher-cell edit-control'
+                    onChange={(v) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.mobile`, v)}
                     value={cellValue}
-                    ref={o => this.refMobile = o}
+                    path={currPath}
                 />
             )
         }
@@ -138,26 +108,59 @@ class action {
         else if (columnKey == 'birthday') {
             return (
                 <DatePicker
-                    className='mk-app-voucher-cell'
-                    onChange={this.birthdayChange(ps)}
+                    className='mk-app-voucher-cell edit-control'
+                    onChange={(v) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.birthday`, v)}
                     value={moment(cellValue)}
+                    path={currPath}
                 />
             )
         }
 
-        else if (columnKey == 'sex') {
+        else if (columnKey == 'rela') {
+            const relaDataSource = this.metaAction.gf('data.other.relaDataSource')
             return (
                 <Select
-                    className='mk-app-voucher-cell'
+                    className='mk-app-voucher-cell edit-control'
                     allowClear
-                    onChange={this.sexChange(ps)}
-                    value={cellValue ? cellValue.get('value') + '' : undefined}
+                    onChange={(v) => {
+                        const rela = relaDataSource.find(o => o.get('id') == v)
+                        this.metaAction.sf(`data.form.details.${ps.rowIndex}.rela`, rela)
+                    }}
+                    value={cellValue ? cellValue.get('id') : undefined}
+                    path={currPath}
                 >
-                    <Option value="0">男</Option>
-                    <Option value="1">女</Option>
+                    {relaDataSource.map(o => <Option value={o.get('id')}>{o.get('name')} </Option>)}
                 </Select>
             )
         }
+    }
+
+
+    focus = (e) => {
+        const path = this.findPathByEvent(e)
+        if (this.isFocusCell(path)) return
+        this.metaAction.sf('data.other.focusFieldPath', path)
+    }
+
+    findPathByEvent = (e) => {
+        const loop = (inst) => {
+            const p = inst._currentElement
+                && inst._currentElement._owner
+                && inst._currentElement._owner._currentElement
+                && inst._currentElement._owner._currentElement.props.path
+
+            if (!p && inst)
+                return loop(inst._hostParent)
+
+            return p
+        }
+        return loop(e._targetInst)
+    }
+
+
+    isFocusCell = (path) => {
+        const focusFieldPath = this.metaAction.gf('data.other.focusFieldPath')
+        return path == focusFieldPath
     }
 }
 

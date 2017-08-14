@@ -199,7 +199,12 @@ var UploadList = function (_React$Component) {
                     previewIcon,
                     removeIcon
                 ) : removeIconCross;
-                var message = file.response || file.error && file.error.statusText || locale.uploadError;
+                var message = void 0;
+                if (file.response && typeof file.response === 'string') {
+                    message = file.response;
+                } else {
+                    message = file.error && file.error.statusText || locale.uploadError;
+                }
                 var iconAndPreview = file.status === 'error' ? _react2['default'].createElement(
                     _tooltip2['default'],
                     { title: message },

@@ -175,7 +175,9 @@ export function getMeta() {
 					component: 'DataGrid.Cell',
 					children: '家庭成员姓名'
 				},
-				cell: "{{$cellGetter('name')}}",
+				cell: `{{{
+					return $cellGetter('name', _path);
+				}}}`,
 			}, {
 				name: 'rela',
 				component: 'DataGrid.Column',
@@ -187,7 +189,7 @@ export function getMeta() {
 					component: 'DataGrid.Cell',
 					children: '关系'
 				},
-				cell: "{{$cellGetter('rela')}}",
+				cell: "{{$cellGetter('rela', _path)}}",
 			}, {
 				name: 'mobile',
 				component: 'DataGrid.Column',
@@ -199,7 +201,7 @@ export function getMeta() {
 					component: 'DataGrid.Cell',
 					children: '手机'
 				},
-				cell: "{{$cellGetter('mobile')}}",
+				cell: "{{$cellGetter('mobile', _path)}}",
 			}, {
 				name: 'birthday',
 				component: 'DataGrid.Column',
@@ -211,7 +213,7 @@ export function getMeta() {
 					component: 'DataGrid.Cell',
 					children: '出生日期'
 				},
-				cell: "{{$cellGetter('birthday')}}",
+				cell: "{{$cellGetter('birthday', _path)}}",
 			}]
 		}]
 	}
@@ -227,10 +229,17 @@ export function getInitState() {
 			},
 			other: {
 				educationDataSource: [{
-					id: 0,
+					id: '0',
 					name: '本科'
 				}, {
-					id: 1,
+					id: '1',
+					name: '专科'
+				}],
+				relaDataSource: [{
+					id: '0',
+					name: '本科'
+				},{
+					id: '1',
 					name: '专科'
 				}]
 			}

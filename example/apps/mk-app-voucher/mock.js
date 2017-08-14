@@ -7,8 +7,8 @@ import { fetch } from 'mk-utils'
 const mockData = fetch.mockData
 
 function init() {
-    if (!mockData.editableTable) {
-        mockData.editableTable = []
+    if (!mockData.vouchers) {
+        mockData.vouchers = []
         for (let i = 0; i < 5; i++) {
             mockData.editableTable.push({
                 id: i,
