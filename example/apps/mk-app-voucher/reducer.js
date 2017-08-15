@@ -1,4 +1,4 @@
-import { Map, fromJS } from 'immutable'
+import { Map, List, fromJS } from 'immutable'
 import { reducer as MetaReducer } from 'mk-meta-engine'
 import config from './config'
 import { getInitState } from './data'
@@ -11,32 +11,51 @@ class reducer {
     }
 
     init = (state, option) => {
-        const initState = getInitState()
-        return this.metaReducer.init(state, initState)
+        return this.metaReducer.init(state, getInitState())
     }
 
-    load = (state, response) => {
-        response.list.forEach(o=>o.birthday = moment(o.birthday))
-        state = this.metaReducer.sf(state, 'data.list', fromJS(response.list))
-        return this.metaReducer.sf(state, 'data.other.focusCellInfo', undefined)
+    load = (state, { voucher, educationDataSource, relaDataSource }) => {
+        if (voucher) {
+            state = this.metaReducer.sf(state, 'data.form', fromJS({
+                ...voucher,
+                birthday: moment(voucher.birthday),
+                details: voucher.details.map(o=>({...o, birthday: moment(o.birthday)}))
+            }))
+        }
+        state = this.metaReducer.sf(state, 'data.other.educationDataSource', fromJS(educationDataSource))
+        state = this.metaReducer.sf(state, 'data.other.relaDataSource', fromJS(relaDataSource))
+        return state
+    }
+
+    setVoucher = (state, voucher) => {
+        state = this.metaReducer.sf(state, 'data.form', fromJS({
+            ...voucher, 
+            birthday: moment(voucher.birthday),
+            details: voucher.details.map(o=>({...o, birthday: moment(o.birthday)}))
+        }))
+
+        return this.metaReducer.sf(state, 'data.other.checkFields', List())
     }
 
     addEmptyRow = (state, rowIndex) => {
         var details = this.metaReducer.gf(state, 'data.form.details')
-        details = details.insert(rowIndex,Map({
-            _index: details.size
-        }))
+        details = details.insert(rowIndex, Map({}))
 
         return this.metaReducer.sf(state, 'data.form.details', details)
     }
 
-    delrow = (state, index) => {
+    delrow = (state, rowIndex) => {
         var details = this.metaReducer.gf(state, 'data.form.details')
-       
-        if (index == -1)
+
+        if (rowIndex == -1)
             return state
 
-        details = details.remove(index)
+        details = details.remove(rowIndex)
+
+        //永远保证有一行
+        if(details.size == 0 )
+            details = details.insert(rowIndex, Map({}))
+
         return this.metaReducer.sf(state, 'data.form.details', details)
     }
 }

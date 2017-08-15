@@ -5,11 +5,7 @@ import appInfo from './index'
 
 @wrapper(appInfo)
 export default class C extends Component {
-	componentWillMount(){
-		const d = ReactDOM
-		const dom = ReactDOM.findDOMNode(this)
-		debugger
-	}
+
 	render() {
 		return this.props.monkeyKing({ ...this.props, path: 'root' })
 	}

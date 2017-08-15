@@ -7,8 +7,11 @@
 import { fetch } from 'mk-utils'
 
 export default {
-    editableTable: {
-        query: (option) => fetch.post('/v1/editabletable/query', option),
-        save: (list) => fetch.post('/v1/editabletable/save', {list}),
+    voucher: {
+        init: (option) => fetch.post('/v1/voucher/init', option),
+        create: (option) => fetch.post('/v1/voucher/create', option),
+        update: (option) => fetch.post('/v1/voucher/update', option),
+        prev: (id) => fetch.post('/v1/voucher/prev', {id}),
+        next: (id) => fetch.post('/v1/voucher/next', {id}),
     }
 }

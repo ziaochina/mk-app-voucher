@@ -21,15 +21,86 @@ class action {
     }
 
     load = async () => {
-        const response = await this.webapi.editableTable.query()
-        this.injections.reduce('load', response)
+        const payload = {}
+        const response = await this.webapi.voucher.init({id:this.component.props.voucherId})
+        debugger
+        payload.voucher = response.voucher
+        payload.educationDataSource = response.educations
+        payload.relaDataSource = response.relas
+        this.injections.reduce('load', payload)
+    }
+
+
+    prev = async () => {
+        const id = this.metaAction.gf('data.form.id')
+        const response = await this.webapi.voucher.prev(id)
+        if (response) {
+            this.injections.reduce('setVoucher', response)
+        }
+    }
+
+    next = async () => {
+        const id = this.metaAction.gf('data.form.id')
+        const response = await this.webapi.voucher.next(id)
+        if (response) {
+            this.injections.reduce('setVoucher', response)
+        }
+    }
+
+    checkSave(form) {
+        var msg = []
+        if (!form.name) {
+            msg.push('姓名不能为空!')
+        }
+
+        if (!form.mobile)
+            msg.push('手机不能为空!')
+
+        if (!form.details || form.details.length == 0) {
+            msg.push('家庭情况不能为空！')
+        }
+
+        form.details.forEach((detail, index) => {
+            if (!detail.name)
+                msg.push(`家庭情况第${index + 1}行，家庭成员姓名不能为空！`)
+
+            if (!detail.rela)
+                msg.push(`家庭情况第${index + 1}行，关系不能为空！`)
+        })
+
+        return msg
     }
 
     save = async () => {
         var form = this.metaAction.gf('data.form').toJS()
+        const msg = this.checkSave(form)
+
+        if (msg.length > 0) {
+            this.metaAction.toast('error',
+                <ul style={{ textAlign: 'left' }}>
+                    {msg.map(o => <li>{o}</li>)}
+                </ul>
+            )
+            return
+        }
+
+        form.birthday = form.birthday.format('YYYY-MM-DD')
+        form.details = form.details.map(detail => ({ ...detail, birthday: detail.birthday ? detail.birthday.format('YYYY-MM-DD') : undefined }))
+        if (form.id || form.id == 0) {
+            const response = await this.webapi.voucher.update(form)
+            if (response) {
+                this.metaAction.toast('success', '保存单据成功')
+                this.injections.reduce('setVoucher', response)
+            }
+
+        }
         console.log(form)
-        //this.metaAction.toast('success', '保存成功')
-        //this.load()
+    }
+
+    educationChange = (v) => {
+        const educationDataSource = this.metaAction.gf('data.other.educationDataSource')
+        const education = educationDataSource.find(o => o.get('id') == v)
+        this.metaAction.sf(`data.form.education`, education)
     }
 
 
@@ -38,9 +109,7 @@ class action {
     }
 
     delrow = (ps) => {
-        const list = this.metaAction.gf('data.list')
-        const id = list.getIn([ps.rowIndex, 'id'])
-        this.injections.reduce('delrow', id)
+        this.injections.reduce('delrow', ps.rowIndex)
     }
 
     cellClick = (e) => {

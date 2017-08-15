@@ -21,14 +21,14 @@ export function getMeta() {
 						type: 'softly',
 						size: 'small',
 						icon: 'left',
-						//onClick: '{{$prev}}'
+						onClick: '{{$prev}}'
 					}, {
 						name: 'next',
 						component: 'Button',
 						type: 'softly',
 						size: 'small',
 						icon: 'right',
-						//onClick: '{{$next}}'
+						onClick: '{{$next}}'
 					}]
 				}]
 			}, {
@@ -99,7 +99,7 @@ export function getMeta() {
 				children: [{
 					name: 'married',
 					component: 'Checkbox',
-					value: '{{data.form.married}}',
+					checked: '{{data.form.married}}',
 					onChange: "{{(e)=>$setField('data.form.married',e.target.checked)}}",
 				}]
 			}, {
@@ -119,8 +119,8 @@ export function getMeta() {
 				children: [{
 					name: 'education',
 					component: 'Select',
-					value: '{{data.form.education}}',
-					onChange: "{{(v)=>$setField('data.form.education',v)}}",
+					value: '{{data.form.education ? data.form.education.id: undefined }}',
+					onChange: "{{$educationChange}}",
 					children: {
 						name: 'option',
 						component: 'Select.Option',
@@ -173,7 +173,12 @@ export function getMeta() {
 				header: {
 					name: 'header',
 					component: 'DataGrid.Cell',
-					children: '家庭成员姓名'
+					children: [{
+						name: 'label',
+						component: '::label',
+						className: 'ant-form-item-required',
+						children: '家庭成员姓名'
+					}]
 				},
 				cell: `{{{
 					return $cellGetter('name', _path);
@@ -187,7 +192,12 @@ export function getMeta() {
 				header: {
 					name: 'header',
 					component: 'DataGrid.Cell',
-					children: '关系'
+					children: [{
+						name: 'label',
+						component: '::label',
+						className: 'ant-form-item-required',
+						children: '关系'
+					}]
 				},
 				cell: "{{$cellGetter('rela', _path)}}",
 			}, {
@@ -223,26 +233,9 @@ export function getInitState() {
 	return {
 		data: {
 			form: {
-				details: [{
-					_index: 0
-				}]
+				details: [{}]
 			},
-			other: {
-				educationDataSource: [{
-					id: '0',
-					name: '本科'
-				}, {
-					id: '1',
-					name: '专科'
-				}],
-				relaDataSource: [{
-					id: '0',
-					name: '本科'
-				},{
-					id: '1',
-					name: '专科'
-				}]
-			}
+			other: {}
 		}
 	}
 }
