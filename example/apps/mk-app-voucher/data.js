@@ -38,9 +38,22 @@ export function getMeta() {
 				children: [{
 					name: 'save',
 					component: 'Button',
-					type: 'softly',
+					type: 'showy',
 					onClick: '{{$save}}',
 					children: '保存'
+				},{
+					name: 'add',
+					component: 'Button',
+					type: 'softly',
+					onClick: '{{$add}}',
+					children: '新增'
+				},{
+					name: 'del',
+					component: 'Button',
+					type: 'softly',
+					disabled: '{{!(!!data.form.id || data.form.id == 0)}}',
+					onClick: '{{$del}}',
+					children: '删除'
 				}]
 			}]
 

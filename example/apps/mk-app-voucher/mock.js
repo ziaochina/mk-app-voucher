@@ -73,44 +73,116 @@ fetch.mock('/v1/voucher/findById', (option) => {
 
 fetch.mock('/v1/voucher/prev', (option) => {
     initMockData()
-    if (option.id == 0)
-        return { result: true, value: mockData.vouchers[0] }
-
-    if (option.id) {
-        const index = option.id - 1 < 0 ? 0 : option.id - 1
-        return { result: true, value: mockData.vouchers[index] }
+    if (!mockData.vouchers || mockData.vouchers.length == 0) {
+        return {
+            result: false,
+            error: {
+                message: '不存在任何单据！'
+            }
+        }
     }
-    return { result: true, value: mockData.vouchers[mockData.vouchers.length - 1] }
+
+    if (!(option.id || option.id == 0)) {
+        return { result: true, value: mockData.vouchers[mockData.vouchers.length - 1] }
+    }
+
+    const index = mockData.vouchers.findIndex(o => o.id == option.id)
+
+    if (index == 0) {
+        return {
+            result: false,
+            error: {
+                message: '已经到第一张单据！'
+            }
+        }
+    }
+
+    return { result: true, value: mockData.vouchers[index - 1] }
 })
 
 
 fetch.mock('/v1/voucher/next', (option) => {
     initMockData()
-    if (option.id || option.id == 0) {
-        const index = option.id + 1 > mockData.vouchers.length - 1 ? mockData.vouchers.length - 1 : option.id + 1
-        return { result: true, value: mockData.vouchers[index] }
+
+    if (!mockData.vouchers || mockData.vouchers.length == 0) {
+        return {
+            result: false,
+            error: {
+                message: '不存在任何单据！'
+            }
+        }
     }
-    return { result: true, value: mockData.vouchers[mockData.vouchers.length - 1] }
+
+    if (!(option.id || option.id == 0)) {
+        return { result: true, value: mockData.vouchers[mockData.vouchers.length - 1] }
+    }
+
+    const index = mockData.vouchers.findIndex(o => o.id == option.id)
+
+    if (index == mockData.vouchers.length - 1) {
+        return {
+            result: false,
+            error: {
+                message: '已经到最后一张单据！'
+            }
+        }
+    }
+
+
+    return { result: true, value: mockData.vouchers[index + 1] }
 })
 
 
 fetch.mock('/v1/voucher/update', (option) => {
     initMockData()
-    option.details.forEach((o, index) => o.id = index)
-    mockData.vouchers[option.id] = option
+    option.details.forEach((o, index) => o.id == index)
+
+    const index = mockData.vouchers.findIndex(o => o.id == option.id)
+    mockData.vouchers.splice(index, 1, option)
     return { result: true, value: option }
 })
 
 fetch.mock('/v1/voucher/create', (option) => {
     initMockData()
 
-    const id = mockData.vouchers.length
+    var maxId = 0
+
+    mockData.vouchers.forEach(o => {
+        maxId = maxId > o.id ? maxId : o.id
+    })
+
+    const id = maxId + 1
     option = { ...option, id }
-    option.details.forEach((o, index) => o.id = index)
+    option.details.forEach((o, index) => o.id == index)
 
     mockData.vouchers.push(option)
-    debugger
+
     return { result: true, value: option }
 })
 
+fetch.mock('/v1/voucher/del', (option) => {
+    initMockData()
+
+    const index = mockData.vouchers.findIndex(o => o.id == option.id)
+    mockData.vouchers.splice(index, 1)
+
+    if (!mockData.vouchers || mockData.vouchers.length == 0) {
+        return {
+            result: true
+        }
+    }
+
+    if (mockData.vouchers.length - 1 >= index) {
+        return {
+            result: true,
+            value: mockData.vouchers[index]
+        }
+    }
+    else {
+        return {
+            result: true,
+            value: mockData.vouchers[mockData.vouchers.length - 1]
+        }
+    }
+})
 

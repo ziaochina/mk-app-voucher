@@ -70,6 +70,24 @@ class action {
         return msg
     }
 
+    add = () => {
+
+    }
+
+    del = async () => {
+        const id = this.metaAction.gf('data.form.id')
+        const ret = await this.metaAction.modal('confirm', {
+            title: '删除',
+            content: '确认删除?'
+        })
+
+        if(ret){
+            const response = await this.webapi.voucher.del({id})
+            this.metaAction.toast('success', '删除单据成功')
+            this.injections.reduce('setVoucher', response)
+        }
+    }
+
     save = async () => {
         var form = this.metaAction.gf('data.form').toJS()
         const msg = this.checkSave(form)

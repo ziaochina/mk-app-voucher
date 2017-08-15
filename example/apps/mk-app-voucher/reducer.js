@@ -28,9 +28,10 @@ class reducer {
     }
 
     setVoucher = (state, voucher) => {
-        state = this.metaReducer.sf(state, 'data.form', fromJS(voucher))
-
-        return this.metaReducer.sf(state, 'data.other.checkFields', List())
+        if(voucher)
+            return this.metaReducer.sf(state, 'data.form', fromJS(voucher))
+        else
+            return this.metaReducer.sf(state, 'data.form', fromJS(getInitState().data.form))
     }
 
     addEmptyRow = (state, rowIndex) => {
