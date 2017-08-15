@@ -22,8 +22,7 @@ class action {
 
     load = async () => {
         const payload = {}
-        const response = await this.webapi.voucher.init({id:this.component.props.voucherId})
-        debugger
+        const response = await this.webapi.voucher.init({ id: this.component.props.voucherId })
         payload.voucher = response.voucher
         payload.educationDataSource = response.educations
         payload.relaDataSource = response.relas
@@ -84,17 +83,20 @@ class action {
             return
         }
 
-        form.birthday = form.birthday.format('YYYY-MM-DD')
-        form.details = form.details.map(detail => ({ ...detail, birthday: detail.birthday ? detail.birthday.format('YYYY-MM-DD') : undefined }))
         if (form.id || form.id == 0) {
             const response = await this.webapi.voucher.update(form)
             if (response) {
                 this.metaAction.toast('success', '保存单据成功')
                 this.injections.reduce('setVoucher', response)
             }
-
         }
-        console.log(form)
+        else {
+            const response = await this.webapi.voucher.create(form)
+            if (response) {
+                this.metaAction.toast('success', '保存单据成功')
+                this.injections.reduce('setVoucher', response)
+            }
+        }
     }
 
     educationChange = (v) => {
@@ -135,13 +137,9 @@ class action {
         var showValue = cellValue
         var currPath = `${path},${ps.rowIndex}`
 
-        if (columnKey == 'birthday') {
-            showValue = cellValue ? cellValue.format('YYYY-MM-DD') : cellValue
-        }
-        else if (columnKey == 'rela') {
+        if (columnKey == 'rela') {
             showValue = cellValue ? cellValue.get('name') : ''
         }
-
 
         if (!this.isFocusCell(currPath)) {
             return (
@@ -178,8 +176,8 @@ class action {
             return (
                 <DatePicker
                     className='mk-app-voucher-cell edit-control'
-                    onChange={(v) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.birthday`, v)}
-                    value={moment(cellValue)}
+                    onChange={(v) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.birthday`, this.momentToString(v, 'YYYY-MM-DD'))}
+                    value={this.stringToMoment(cellValue)}
                     path={currPath}
                 />
             )
@@ -226,11 +224,23 @@ class action {
         return loop(e._targetInst)
     }
 
-
     isFocusCell = (path) => {
         const focusFieldPath = this.metaAction.gf('data.other.focusFieldPath')
         return path == focusFieldPath
     }
+
+    stringToMoment = (v) => {
+        if (!v)
+            return v
+        return moment(v)
+    }
+
+    momentToString = (v, format) => {
+        if (!v)
+            return v
+        return moment(v).format(format)
+    }
+
 }
 
 export default function creator(option) {

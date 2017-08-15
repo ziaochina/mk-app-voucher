@@ -109,8 +109,8 @@ export function getMeta() {
 				children: [{
 					name: 'birthday',
 					component: 'DatePicker',
-					value: '{{data.form.birthday}}',
-					onChange: "{{(d)=>$setField('data.form.birthday',d)}}",
+					value: '{{$stringToMoment(data.form.birthday)}}',
+					onChange: "{{(d)=>$setField('data.form.birthday',$momentToString(d,'YYYY-MM-DD'))}}",
 				}]
 			}, {
 				name: 'educationItem',
@@ -233,6 +233,8 @@ export function getInitState() {
 	return {
 		data: {
 			form: {
+				sex: '0',
+				education: { id: '0', name: '本科' },
 				details: [{}]
 			},
 			other: {}

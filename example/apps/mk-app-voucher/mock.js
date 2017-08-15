@@ -101,5 +101,16 @@ fetch.mock('/v1/voucher/update', (option) => {
     return { result: true, value: option }
 })
 
+fetch.mock('/v1/voucher/create', (option) => {
+    initMockData()
+
+    const id = mockData.vouchers.length
+    option = { ...option, id }
+    option.details.forEach((o, index) => o.id = index)
+
+    mockData.vouchers.push(option)
+    debugger
+    return { result: true, value: option }
+})
 
 
