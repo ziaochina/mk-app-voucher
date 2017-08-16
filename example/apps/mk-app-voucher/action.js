@@ -2,8 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { action as MetaAction, AppLoader } from 'mk-meta-engine'
 import config from './config'
-import { Input, DataGrid, DatePicker, Select } from 'mk-component'
-import { Map } from 'immutable'
+import { Map, fromJS } from 'immutable'
 import moment from 'moment'
 
 class action {
@@ -29,7 +28,6 @@ class action {
         this.injections.reduce('load', payload)
     }
 
-
     prev = async () => {
         const id = this.metaAction.gf('data.form.id')
         const response = await this.webapi.voucher.prev(id)
@@ -42,6 +40,24 @@ class action {
         const id = this.metaAction.gf('data.form.id')
         const response = await this.webapi.voucher.next(id)
         if (response) {
+            this.injections.reduce('setVoucher', response)
+        }
+    }
+
+    add = () => {
+        this.injections.reduce('setVoucher')
+    }
+
+    del = async () => {
+        const id = this.metaAction.gf('data.form.id')
+        const ret = await this.metaAction.modal('confirm', {
+            title: '删除',
+            content: '确认删除?'
+        })
+
+        if (ret) {
+            const response = await this.webapi.voucher.del({ id })
+            this.metaAction.toast('success', '删除单据成功')
             this.injections.reduce('setVoucher', response)
         }
     }
@@ -68,24 +84,6 @@ class action {
         })
 
         return msg
-    }
-
-    add = () => {
-
-    }
-
-    del = async () => {
-        const id = this.metaAction.gf('data.form.id')
-        const ret = await this.metaAction.modal('confirm', {
-            title: '删除',
-            content: '确认删除?'
-        })
-
-        if(ret){
-            const response = await this.webapi.voucher.del({id})
-            this.metaAction.toast('success', '删除单据成功')
-            this.injections.reduce('setVoucher', response)
-        }
     }
 
     save = async () => {
@@ -117,12 +115,34 @@ class action {
         }
     }
 
+    addEducation = async () => {
+        const ret = await this.metaAction.modal('show', {
+            title: '新增学历',
+            children: this.metaAction.loadApp('mk-app-voucher-education', {
+                store: this.component.props.store,
+            })
+        })
+
+        if (ret) {
+            const response = await this.webapi.education.query()
+            this.metaAction.sfs({
+                'data.other.educationDataSource': fromJS(response),
+                'data.form.education': fromJS(ret)
+            })
+        }
+
+    }
+
+    educationFocus = async () => {
+        const response = await this.webapi.education.query()
+        this.metaAction.sf('data.other.educationDataSource', fromJS(response))
+    }
+
     educationChange = (v) => {
         const educationDataSource = this.metaAction.gf('data.other.educationDataSource')
         const education = educationDataSource.find(o => o.get('id') == v)
         this.metaAction.sf(`data.form.education`, education)
     }
-
 
     addrow = (ps) => {
         this.injections.reduce('addEmptyRow', ps.rowIndex + 1)
@@ -132,131 +152,37 @@ class action {
         this.injections.reduce('delrow', ps.rowIndex)
     }
 
+    getCellClassName = (path) => {
+        return this.metaAction.isFocus(path) ? 'mk-app-voucher-cell edit-control' : ''
+    }
+
     cellClick = (e) => {
-        const path = this.findPathByEvent(e)
-        if (this.isFocusCell(path)) return
+        const path = this.metaAction.findPathByEvent(e)
+        if (this.metaAction.isFocus(path)) return
 
         this.metaAction.sf('data.other.focusFieldPath', path)
 
         const that = this
         setTimeout(() => {
             const editorDOM = ReactDOM.findDOMNode(that.component).querySelector(".edit-control")
-            if (editorDOM.select)
-                editorDOM.select()
+            if (!editorDOM) return
 
-            else if (editorDOM.querySelector('input')) {
-                editorDOM.querySelector('input').click()
+            if (editorDOM.className.indexOf('input') != -1) {
+                editorDOM.select()
+                return
+            }
+
+            if (editorDOM.className.indexOf('select') != -1) {
+                editorDOM.click()
+                return
+            }
+
+            if (editorDOM.className.indexOf('datepicker') != -1) {
+                const input = editorDOM.querySelector('input')
+                input.click()
+                return
             }
         }, 16)
-    }
-
-    cellGetter = (columnKey, path) => (ps) => {
-        var cellValue = this.metaAction.gf(`data.form.details.${ps.rowIndex}.${columnKey}`)
-        var showValue = cellValue
-        var currPath = `${path},${ps.rowIndex}`
-
-        if (columnKey == 'rela') {
-            showValue = cellValue ? cellValue.get('name') : ''
-        }
-
-        if (!this.isFocusCell(currPath)) {
-            return (
-                <DataGrid.TextCell
-                    onClick={this.cellClick}
-                    value={showValue}
-                    path={currPath}
-                />
-            )
-        }
-
-        if (columnKey == 'name') {
-            return (
-                <Input
-                    className='mk-app-voucher-cell edit-control'
-                    onChange={(e) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.name`, e.target.value)}
-                    value={cellValue}
-                    path={currPath}
-                />
-            )
-        }
-        else if (columnKey == 'mobile') {
-            return (
-                <Input.Number
-                    className='mk-app-voucher-cell edit-control'
-                    onChange={(v) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.mobile`, v)}
-                    value={cellValue}
-                    path={currPath}
-                />
-            )
-        }
-
-        else if (columnKey == 'birthday') {
-            return (
-                <DatePicker
-                    className='mk-app-voucher-cell edit-control'
-                    onChange={(v) => this.metaAction.sf(`data.form.details.${ps.rowIndex}.birthday`, this.momentToString(v, 'YYYY-MM-DD'))}
-                    value={this.stringToMoment(cellValue)}
-                    path={currPath}
-                />
-            )
-        }
-
-        else if (columnKey == 'rela') {
-            const relaDataSource = this.metaAction.gf('data.other.relaDataSource')
-            return (
-                <Select
-                    className='mk-app-voucher-cell edit-control'
-                    allowClear
-                    onChange={(v) => {
-                        const rela = relaDataSource.find(o => o.get('id') == v)
-                        this.metaAction.sf(`data.form.details.${ps.rowIndex}.rela`, rela)
-                    }}
-                    value={cellValue ? cellValue.get('id') : undefined}
-                    path={currPath}
-                >
-                    {relaDataSource.map(o => <Option value={o.get('id')}>{o.get('name')} </Option>)}
-                </Select>
-            )
-        }
-    }
-
-
-    focus = (e) => {
-        const path = this.findPathByEvent(e)
-        if (this.isFocusCell(path)) return
-        this.metaAction.sf('data.other.focusFieldPath', path)
-    }
-
-    findPathByEvent = (e) => {
-        const loop = (inst) => {
-            const p = inst._currentElement
-                && inst._currentElement._owner
-                && inst._currentElement._owner._currentElement
-                && inst._currentElement._owner._currentElement.props.path
-
-            if (!p && inst)
-                return loop(inst._hostParent)
-
-            return p
-        }
-        return loop(e._targetInst)
-    }
-
-    isFocusCell = (path) => {
-        const focusFieldPath = this.metaAction.gf('data.other.focusFieldPath')
-        return path == focusFieldPath
-    }
-
-    stringToMoment = (v) => {
-        if (!v)
-            return v
-        return moment(v)
-    }
-
-    momentToString = (v, format) => {
-        if (!v)
-            return v
-        return moment(v).format(format)
     }
 
 }

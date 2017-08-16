@@ -18,8 +18,7 @@ function initMockData() {
                 mobile: '13818181' + (100 + i),
                 married: i % 2 == 0 ? true : false,
                 education: { id: i % 2 + '', name: i % 2 == 0 ? '本科' : '专科' },
-                signature: '诸葛' + (i + 1) + ' good!'
-
+                signature: '诸葛' + (i + 1) + ' good!',
             })
 
             mockData.vouchers[i].details = []
@@ -29,8 +28,32 @@ function initMockData() {
                 rela: { id: '0', name: '夫妻' },
                 mobile: '13817181' + (100 + i),
                 birthday: `1983-${i % 11 + 1}-${i % 28 + 1}`,
+                isWork:i % 2 == 0 ? true : false, 
             })
         }
+    }
+
+    if (!mockData.educations) {
+        mockData.educations = [{
+            id: '0',
+            name: '本科'
+        }, {
+            id: '1',
+            name: '专科'
+        }]
+    }
+
+    if (!mockData.relas) {
+        mockData.relas = [{
+            id: '0',
+            name: '夫妻'
+        }, {
+            id: '1',
+            name: '父母'
+        }, {
+            id: '2',
+            name: '子女'
+        }]
     }
 }
 
@@ -41,23 +64,8 @@ fetch.mock('/v1/voucher/init', (option) => {
         result: true,
         value: {
             voucher: (option.id || option.id == 0) ? mockData.vouchers.find(o => o.id == option.id) : undefined,
-            educations: [{
-                id: '0',
-                name: '本科'
-            }, {
-                id: '1',
-                name: '专科'
-            }],
-            relas: [{
-                id: '0',
-                name: '夫妻'
-            }, {
-                id: '1',
-                name: '父母'
-            }, {
-                id: '2',
-                name: '子女'
-            }]
+            educations: mockData.educations,
+            relas: mockData.relas
         }
     }
 })
@@ -183,6 +191,13 @@ fetch.mock('/v1/voucher/del', (option) => {
             result: true,
             value: mockData.vouchers[mockData.vouchers.length - 1]
         }
+    }
+})
+
+fetch.mock('/v1/education/query', (option) => {
+    return {
+        result: true,
+        value: mockData.educations
     }
 })
 

@@ -12,7 +12,10 @@ export default {
         create: (option) => fetch.post('/v1/voucher/create', option),
         update: (option) => fetch.post('/v1/voucher/update', option),
         del: (option) => fetch.post('/v1/voucher/del', option),
-        prev: (id) => fetch.post('/v1/voucher/prev', {id}),
-        next: (id) => fetch.post('/v1/voucher/next', {id}),
+        prev: (id) => fetch.post('/v1/voucher/prev', { id }),
+        next: (id) => fetch.post('/v1/voucher/next', { id }),
+    },
+    education: {
+        query: (option) => fetch.post('/v1/education/query', option)
     }
 }

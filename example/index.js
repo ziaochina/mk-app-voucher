@@ -2,10 +2,12 @@ import { config, start, componentFactory } from 'mk-meta-engine'
 import * as mkComponents from 'mk-component'
 import myConfig  from './config'
 
+import mk_app_voucher_education from './apps/mk-app-voucher/apps/mk-app-voucher-education/index.js'
 import mk_app_voucher from './apps/mk-app-voucher/index.js'
 
 const apps = {
 		
+	[mk_app_voucher_education.name]: mk_app_voucher_education,	
 	[mk_app_voucher.name]: mk_app_voucher,
 }
 

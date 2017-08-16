@@ -41,13 +41,13 @@ export function getMeta() {
 					type: 'showy',
 					onClick: '{{$save}}',
 					children: '保存'
-				},{
+				}, {
 					name: 'add',
 					component: 'Button',
 					type: 'softly',
 					onClick: '{{$add}}',
 					children: '新增'
-				},{
+				}, {
 					name: 'del',
 					component: 'Button',
 					type: 'softly',
@@ -70,7 +70,7 @@ export function getMeta() {
 					name: 'name',
 					component: 'Input',
 					value: '{{data.form.name}}',
-					onChange: "{{(e)=>$setField('data.form.name',e.target.value)}}",
+					onChange: "{{(e)=>$sf('data.form.name',e.target.value)}}",
 				}]
 			}, {
 				name: 'mobileItem',
@@ -81,7 +81,7 @@ export function getMeta() {
 					name: 'mobile',
 					component: 'Input.Number',
 					value: '{{data.form.mobile}}',
-					onChange: "{{(v)=>$setField('data.form.mobile',v)}}",
+					onChange: "{{(v)=>$sf('data.form.mobile',v)}}",
 				}]
 			}, {
 				name: 'sexItem',
@@ -92,7 +92,7 @@ export function getMeta() {
 					name: 'sex',
 					component: 'Radio.Group',
 					value: '{{data.form.sex}}',
-					onChange: "{{(e)=>$setField('data.form.sex',e.target.value)}}",
+					onChange: "{{(e)=>$sf('data.form.sex',e.target.value)}}",
 					children: [{
 						name: 'man',
 						value: '0',
@@ -113,7 +113,7 @@ export function getMeta() {
 					name: 'married',
 					component: 'Checkbox',
 					checked: '{{data.form.married}}',
-					onChange: "{{(e)=>$setField('data.form.married',e.target.checked)}}",
+					onChange: "{{(e)=>$sf('data.form.married',e.target.checked)}}",
 				}]
 			}, {
 				name: 'birthdayItem',
@@ -123,7 +123,7 @@ export function getMeta() {
 					name: 'birthday',
 					component: 'DatePicker',
 					value: '{{$stringToMoment(data.form.birthday)}}',
-					onChange: "{{(d)=>$setField('data.form.birthday',$momentToString(d,'YYYY-MM-DD'))}}",
+					onChange: "{{(d)=>$sf('data.form.birthday',$momentToString(d,'YYYY-MM-DD'))}}",
 				}]
 			}, {
 				name: 'educationItem',
@@ -132,15 +132,25 @@ export function getMeta() {
 				children: [{
 					name: 'education',
 					component: 'Select',
+					showSearch: false,
 					value: '{{data.form.education ? data.form.education.id: undefined }}',
 					onChange: "{{$educationChange}}",
+					onFocus: "{{$educationFocus}}",
 					children: {
 						name: 'option',
 						component: 'Select.Option',
 						value: "{{ data.other.educationDataSource ? data.other.educationDataSource[_rowIndex].id : undefined}}",
 						children: '{{data.other.educationDataSource ? data.other.educationDataSource[_rowIndex].name : undefined}}',
 						_power: 'for in data.other.educationDataSource'
-					}
+					},
+					dropdownFooter: {
+						name: 'add',
+						component: 'Button',
+						type: 'primary',
+						style: { width: '100%' },
+						children: '新增',
+						onClick: '{{$addEducation}}'
+					},
 				}]
 			}, {
 				name: 'signatureItem',
@@ -151,7 +161,7 @@ export function getMeta() {
 					name: 'signature',
 					component: 'Input',
 					value: '{{data.form.signature}}',
-					onChange: "{{(e)=>$setField('data.form.signature',e.target.value)}}",
+					onChange: "{{(e)=>$sf('data.form.signature',e.target.value)}}",
 				}]
 			}]
 		}, {
@@ -193,9 +203,15 @@ export function getMeta() {
 						children: '家庭成员姓名'
 					}]
 				},
-				cell: `{{{
-					return $cellGetter('name', _path);
-				}}}`,
+				cell: {
+					name: 'cell',
+					component: "{{$isFocus(_fullPath) ? 'Input' : 'DataGrid.TextCell'}}",
+					className: "{{$getCellClassName(_fullPath)}}",
+					value: "{{data.form.details[_rowIndex].name}}",
+					onClick: "{{$cellClick}}",
+					onChange: "{{(e)=>$sf('data.form.details.' + _rowIndex + '.name', e.target.value)}}",
+					_power: '({rowIndex})=>rowIndex',
+				}
 			}, {
 				name: 'rela',
 				component: 'DataGrid.Column',
@@ -212,7 +228,32 @@ export function getMeta() {
 						children: '关系'
 					}]
 				},
-				cell: "{{$cellGetter('rela', _path)}}",
+				cell: {
+					name: 'cell',
+					component: "{{$isFocus(_fullPath) ? 'Select' : 'DataGrid.TextCell'}}",
+					className: "{{$getCellClassName(_fullPath)}}",
+					showSearch: false,
+					value: `{{{
+						if(!data.form.details[_rowIndex].rela) return undefined
+						return $isFocus(_fullPath)
+							? data.form.details[_rowIndex].rela.id
+							: data.form.details[_rowIndex].rela.name
+					}}}`,
+					onClick: "{{$cellClick}}",
+					children: {
+						name: 'option',
+						component: 'Select.Option',
+						value: '{{data.other.relaDataSource[_vars[1]].id}}',
+						children: '{{data.other.relaDataSource[_vars[1]].name}}',
+						_power: 'for in data.other.relaDataSource'
+					},
+					onChange: `{{(v)=>{
+						const rela = data.other.relaDataSource.find(o=>o.id==v)
+						$sf('data.form.details.'+ _rowIndex + '.rela', $fromJS(rela,undefined))
+					}}}`,
+					_excludeProps: "{{$isFocus(_fullPath)? ['onClick'] : ['children'] }}",
+					_power: '({rowIndex})=>rowIndex',
+				}
 			}, {
 				name: 'mobile',
 				component: 'DataGrid.Column',
@@ -224,7 +265,15 @@ export function getMeta() {
 					component: 'DataGrid.Cell',
 					children: '手机'
 				},
-				cell: "{{$cellGetter('mobile', _path)}}",
+				cell: {
+					name: 'cell',
+					component: "{{$isFocus(_fullPath) ? 'Input.Number' : 'DataGrid.TextCell'}}",
+					className: "{{$getCellClassName(_fullPath)}}",
+					value: "{{data.form.details[_rowIndex].mobile}}",
+					onClick: "{{$cellClick}}",
+					onChange: "{{(v)=>$sf('data.form.details.' + _rowIndex + '.mobile', v)}}",
+					_power: '({rowIndex})=>rowIndex',
+				}
 			}, {
 				name: 'birthday',
 				component: 'DataGrid.Column',
@@ -236,7 +285,39 @@ export function getMeta() {
 					component: 'DataGrid.Cell',
 					children: '出生日期'
 				},
-				cell: "{{$cellGetter('birthday', _path)}}",
+				cell: {
+					name: 'cell',
+					component: "{{$isFocus(_fullPath) ? 'DatePicker' : 'DataGrid.TextCell'}}",
+					className: "{{$getCellClassName(_fullPath)}}",
+					value: `{{{
+						return $isFocus(_fullPath)
+							? $stringToMoment(data.form.details[_rowIndex].birthday)
+							: data.form.details[_rowIndex].birthday
+					}}}`,
+					onClick: "{{$cellClick}}",
+					onChange: "{{(v)=>$sf('data.form.details.' + _rowIndex + '.birthday', $momentToString(v,'YYYY-MM-DD'))}}",
+					_power: '({rowIndex})=>rowIndex',
+				}
+			}, {
+				name: 'isWork',
+				component: 'DataGrid.Column',
+				columnKey: 'isWork',
+				width: 100,
+				header: {
+					name: 'header',
+					component: 'DataGrid.Cell',
+					children: '参加工作'
+				},
+				cell: {
+					name: 'cell',
+					component: "{{$isFocus(_fullPath) ? 'Checkbox' : 'DataGrid.TextCell'}}",
+					className: "{{$getCellClassName(_fullPath)}}",
+					value: "{{ data.form.details[_rowIndex].isWork ? '是': '否' }}",
+					checked: "{{ data.form.details[_rowIndex].isWork }}",
+					onClick: "{{$cellClick}}",
+					onChange: "{{(e)=>$sf('data.form.details.' + _rowIndex + '.isWork', e.target.checked)}}",
+					_power: '({rowIndex})=>rowIndex',
+				}
 			}]
 		}]
 	}
@@ -248,6 +329,7 @@ export function getInitState() {
 			form: {
 				sex: '0',
 				education: { id: '0', name: '本科' },
+				mobile: '',
 				details: [{}]
 			},
 			other: {}
