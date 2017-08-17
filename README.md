@@ -1,6 +1,6 @@
 # mk-app-voucher
 
-树表应用模板，可以clone该app,根据自己需要修改内容
+单据应用模板，可以clone该app,根据自己需要修改内容
 
 [在线演示](https://ziaochina.github.io/mk-app-voucher/)
 
