@@ -158,7 +158,6 @@ class action {
 
     mousedown = (e) => {
         if (!this.metaAction.focusByEvent(e)) return
-        
         setTimeout(this.cellAutoFocus, 16)
     }
 
