@@ -297,7 +297,7 @@ export function getMeta() {
 							: data.form.details[_rowIndex].birthday
 					}}}`,
 					onChange: "{{(v)=>$sf('data.form.details.' + _rowIndex + '.birthday', $momentToString(v,'YYYY-MM-DD'))}}",
-					onOpenChange: "{{$gridBirthdayOpenChange}}",
+					onOpenChange: "{{$dateOpenChange}}",
 					_power: '({rowIndex})=>rowIndex',
 				}
 			}, {

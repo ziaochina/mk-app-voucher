@@ -3,7 +3,7 @@ import * as data from './data'
 
 export default {
 	name: "mk-app-voucher",
-	version: "1.0.6",
+	version: "1.0.7",
 	description: "mk-app-voucher",
 	meta: data.getMeta(),
 	components: [],
