@@ -134,7 +134,6 @@ class action {
                 'data.form.education': fromJS(ret)
             })
         }
-
     }
 
     educationFocus = async () => {
@@ -146,25 +145,6 @@ class action {
         const educationDataSource = this.metaAction.gf('data.other.educationDataSource')
         const education = educationDataSource.find(o => o.get('id') == v)
         this.metaAction.sf(`data.form.education`, education)
-    }
-
-    addrow = (ps) => {
-        this.injections.reduce('addEmptyRow', ps.rowIndex + 1)
-    }
-
-    delrow = (ps) => {
-        this.injections.reduce('delrow', ps.rowIndex)
-    }
-
-    gridBirthdayOpenChange = (status) => {
-        if (status) return
-        const editorDOM = ReactDOM.findDOMNode(this.component).querySelector(".editable-cell")
-        if (!editorDOM) return
-
-        if (editorDOM.className.indexOf('datepicker') != -1) {
-            const input = editorDOM.querySelector('input')
-            input.focus()
-        }
     }
 }
 
